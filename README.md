@@ -4,11 +4,11 @@ Curr is a cli tool that accepts currency amounts (represented as floating point 
 and types (represented as strings), and returns human language string representations of the given
 currency value and type. It is written with the [Go](https://go.dev/) programming language.
 
-####Usage:
+#### Usage:
 
 	curr-cli [flags]
 
-####Flags:
+#### Flags:
 
 	-amount float
 		amount to translate (default 500)
@@ -26,14 +26,14 @@ curr, err := GetCurrencyStringFromNumber(1234.12, "EURO")
 
 Curr accepts `USD` (US Dollar), `EURO` (Euro), `SEK` (Swedish Krona), `BRL` (Brazilian Real) as currency types.
 
-##Build
+### Build
 
 To compile an executable, run `go build -o curr-cli  cmd/main.go`.
 
 _note: a precompiled executable named `curr-cli` is included in the repo, in case you
 don't have Go set up on your machine._
 
-##Test
+### Test
 
 Tests can be run with the following command: `go test ./...`
 
