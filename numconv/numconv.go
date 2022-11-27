@@ -26,7 +26,7 @@ func IntToStrings(n int, m func(xs []int) (string, error)) ([]string, error) {
 				cs = append([]string{c}, cs...)
 				ns = []int{}
 			}
-			// recursively call itsFunc, dividing n by 10,
+			// recursively call itsFunc, dividing n by 10 (and implicitly taking the floor of the result),
 			// so we can handle the next smallest value in it
 			return itsFunc(n/10, ns, cs)
 		}
