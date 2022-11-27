@@ -13,6 +13,14 @@ import (
 const (
 	Max = 999999999.999
 	Min = 0.0
+
+	SingularAmount = 1.0
+
+	FractionalMultiplier = 100
+	TensMultiplier       = 10
+
+	LargestAtomicValue  = 19
+	SmallestAtomicValue = 0
 )
 
 var (
@@ -79,7 +87,7 @@ type Currency struct {
 }
 
 func (c Currency) Name(amount float64) string {
-	if amount == 1.0 {
+	if amount == SingularAmount {
 		return c.name
 	} else {
 		return c.pluralName
@@ -87,7 +95,7 @@ func (c Currency) Name(amount float64) string {
 }
 
 func (c Currency) Partial(amount float64) string {
-	if amount == 1.0 {
+	if amount == SingularAmount {
 		return c.partial
 	} else {
 		return c.pluralPartial
@@ -107,8 +115,9 @@ func GetCurrencyStringFromNumber(x float64, currency string) (words string, _ er
 		return words, fmt.Errorf("%s is not a supported currency", currency)
 	}
 
+	// Split the value into its 'dollars' and 'cents' components
 	integer, fractional := math.Modf(x)
-	fractional = math.Round(fractional * 100)
+	fractional = math.Round(fractional * FractionalMultiplier)
 
 	dollar, err := numToWords(int(integer))
 	if err != nil {
@@ -120,25 +129,32 @@ func GetCurrencyStringFromNumber(x float64, currency string) (words string, _ er
 		return words, err
 	}
 
+	// Use the values to grab the relevant currency words (singular or plural)
 	dollarName := translatedCurr.Name(integer)
 	centName := translatedCurr.Partial(fractional)
 
+	// Combine the 'dollar' and 'cents' results into a single string
 	words = fmt.Sprintf("%s %s and %s %s", dollar, dollarName, cents, centName)
+	// Capitalize string, and return
 	return strings.ToUpper(words[:1]) + words[1:], nil
 }
 
-// numToWords accepts an integer value x, and
-// returns a string of words
+// numToWords accepts an integer value x, and returns a string of words
 func numToWords(x int) (string, error) {
-	if x < 20 {
+	// If x <= than 19, its string representation can be grabbed directly
+	// from the nums map
+	if x <= LargestAtomicValue {
 		return nums[x], nil
 	}
 
+	// Convert x to a slice of strings or 'number words'
 	chunks, err := numconv.IntToStrings(x, mapNumsToText)
 	if err != nil {
 		return "", err
 	}
 
+	// Depending on number of word parts, add 'thousand' or 'million' to ends or parts
+	// (e.g. the first 'chunk' of a collection of 3 should be 'post-pended' with 'million')
 	switch {
 	case len(chunks) == 3:
 		chunks[0] = fmt.Sprintf("%s %s", chunks[0], magnitudes[2])
@@ -146,22 +162,24 @@ func numToWords(x int) (string, error) {
 	case len(chunks) == 2:
 		chunks[0] = fmt.Sprintf("%s %s", chunks[0], magnitudes[1])
 	}
+	// Combine parts into a single string, and return
 	return strings.Join(chunks, " "), nil
 }
 
-// mapNumsToText accepts a slice of ints s,
-// and returns a string of those numbers as words
+// mapNumsToText accepts a slice of ints s, and returns a string of those numbers as words
 func mapNumsToText(s []int) (string, error) {
+	// If the length of s is 0 or > 3, it is malformed for our purposes, and cannot be used
 	if len(s) > 3 || len(s) == 0 {
 		return "", fmt.Errorf("length of slice must be between 1 - 3, got %d", len(s))
 	}
 
-	// little helper to cut down on clutter
+	// Little helper function to cut down on clutter. It accepts 2 values,
+	// and uses them to determine how to build a 'tens' string (e.g. 13, 31, 93, etc).
 	buildTensFunc := func(a, b int, builder *strings.Builder) {
-		combined := a*10 + b
-		if combined < 20 {
+		combined := a*TensMultiplier + b
+		if combined <= LargestAtomicValue {
 			builder.WriteString(fmt.Sprintf("%s", nums[combined]))
-		} else if b > 0 {
+		} else if b > SmallestAtomicValue {
 			builder.WriteString(fmt.Sprintf("%s %s", tens[a], nums[b]))
 		} else {
 			builder.WriteString(tens[a])
@@ -170,6 +188,7 @@ func mapNumsToText(s []int) (string, error) {
 
 	builder := strings.Builder{}
 
+	// Use length of s to determine how to build string (e.g. hundreds / tens / single value)
 	switch {
 	case len(s) == 3:
 		if s[0] > 0 {
