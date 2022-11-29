@@ -119,6 +119,13 @@ func GetCurrencyStringFromNumber(x float64, currency string) (words string, _ er
 	integer, fractional := math.Modf(x)
 	fractional = math.Round(fractional * FractionalMultiplier)
 
+	// if the fractional rounds up to 100, add it as a dollar (or whatever currency) to the integer
+	// and make it 0 cents
+	if fractional == 100 {
+		integer++
+		fractional = 0
+	}
+
 	dollar, err := numToWords(int(integer))
 	if err != nil {
 		return words, err

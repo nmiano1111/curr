@@ -148,6 +148,24 @@ func TestOnes(t *testing.T) {
 	}
 }
 
+func Test100Cents(t *testing.T) {
+	expected := "One dollar and ninety nine cents"
+	actual, err := GetCurrencyStringFromNumber(1.99, "USD")
+	if err != nil {
+		t.Errorf("should not return error, got %e", err)
+	} else if actual != expected {
+		t.Errorf("expected '%s', got '%s'", expected, actual)
+	}
+
+	expected = "Two dollars and zero cents"
+	actual, err = GetCurrencyStringFromNumber(1.995, "USD")
+	if err != nil {
+		t.Errorf("should not return error, got %e", err)
+	} else if actual != expected {
+		t.Errorf("expected '%s', got '%s'", expected, actual)
+	}
+}
+
 func TestCurrencyTypes(t *testing.T) {
 	_, err := GetCurrencyStringFromNumber(1102350.92, "USD")
 	if err != nil {
